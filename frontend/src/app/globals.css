@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 38 92% 50%; /* Golden/Yellow accent for Bengali vibe */
+    --accent-foreground: 24 9.8% 10%;
+  }
+
+  body {
+    @apply bg-[#0a0a0a] text-neutral-50 font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+.font-bengali {
+  font-family: 'Noto Serif Bengali', serif;
+}
+
+.cinematic-gradient {
+  background: linear-gradient(to top, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0) 100%);
+}
