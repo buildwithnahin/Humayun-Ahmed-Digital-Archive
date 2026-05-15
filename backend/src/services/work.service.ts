@@ -1,30 +1,35 @@
 import { WorkRepository } from '../repositories/work.repository';
-import { GetWorksQuery } from '../validations/work.schema';
-
-const workRepository = new WorkRepository();
+import { GetWorksQuery } from '../validators/work.validator';
+import { AppError } from '../middlewares/errorHandler';
 
 export class WorkService {
-  async getWorks(query: GetWorksQuery) {
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '10', 10);
-    const offset = (page - 1) * limit;
+  private workRepo: WorkRepository;
 
-    const { data, totalCount } = await workRepository.findAll({
-      limit,
-      offset,
-      search: query.search,
-      category: query.category,
-      year: query.year,
-    });
+  constructor() {
+    this.workRepo = new WorkRepository();
+  }
 
+  async getWorks(params: GetWorksQuery) {
+    const { page = 1, limit = 10 } = params;
+    
+    const { data, total } = await this.workRepo.findAllOrSearch(params);
+    
     return {
       works: data,
-      meta: {
-        total: totalCount,
+      pagination: {
+        total,
         page,
         limit,
-        totalPages: Math.ceil(totalCount / limit),
-      },
+        totalPages: Math.ceil(total / limit)
+      }
     };
+  }
+
+  async getWorkById(id: string) {
+    const work = await this.workRepo.findById(id);
+    if (!work) {
+      throw new AppError('Work not found', 404);
+    }
+    return work;
   }
 }

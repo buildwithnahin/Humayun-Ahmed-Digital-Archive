@@ -1,32 +1,34 @@
 import express from 'express';
 import cors from 'cors';
-import { env } from './config/env';
-import { logger } from './middlewares/logger';
-import { errorHandler } from './middlewares/errorHandler';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
 import workRoutes from './routes/work.routes';
+import { errorHandler } from './middlewares/errorHandler';
+
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Middlewares
+// Middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(logger);
+app.use(morgan('dev')); // Standard logger
 
-// Routes
+// API Routes
 app.use('/api/v1/works', workRoutes);
 
-// Catch undefined routes
-app.all('*', (req, res, next) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Can't find ${req.originalUrl} on this server!`,
-  });
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
 
 // Global Error Handler
 app.use(errorHandler);
 
-app.listen(env.PORT, () => {
-  console.log(`Server is running on port ${env.PORT} in ${env.NODE_ENV} mode.`);
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });

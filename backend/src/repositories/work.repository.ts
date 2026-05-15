@@ -1,39 +1,59 @@
-import pool from '../database/db';
+import { db } from '../database';
+import { GetWorksQuery } from '../validators/work.validator';
 
 export class WorkRepository {
-  async findAll({ limit, offset, search, category, year }: any) {
-    let queryStr = `SELECT * FROM works WHERE 1=1`;
-    const queryParams: any[] = [];
+  async findAllOrSearch(params: GetWorksQuery) {
+    const { page = 1, limit = 10, search, category, year } = params;
+    const offset = (page - 1) * limit;
+    
+    let whereClauses = [];
+    let values: any[] = [];
     let paramIndex = 1;
 
     if (search) {
-      queryStr += ` AND (title ILIKE $${paramIndex} OR original_title ILIKE $${paramIndex})`;
-      queryParams.push(`%${search}%`);
+      whereClauses.push(`title ILIKE $${paramIndex} OR original_title ILIKE $${paramIndex}`);
+      values.push(`%${search}%`);
       paramIndex++;
     }
 
     if (category) {
-      queryStr += ` AND category = $${paramIndex}`;
-      queryParams.push(category);
+      whereClauses.push(`category = $${paramIndex}`);
+      values.push(category);
       paramIndex++;
     }
 
     if (year) {
-      queryStr += ` AND publication_year = $${paramIndex}`;
-      queryParams.push(parseInt(year, 10));
+      whereClauses.push(`publication_year = $${paramIndex}`);
+      values.push(year);
       paramIndex++;
     }
 
-    // Clone query to get total count for pagination
-    const countQuery = queryStr.replace('SELECT *', 'SELECT COUNT(*)');
-    const { rows: countRows } = await pool.query(countQuery, queryParams);
-    const totalCount = parseInt(countRows[0].count, 10);
+    const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+    
+    const countQuery = `SELECT COUNT(*) FROM works ${whereString}`;
+    const dataQuery = `
+      SELECT * FROM works 
+      ${whereString} 
+      ORDER BY publication_year DESC NULLS LAST, title ASC 
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    
+    values.push(limit, offset);
 
-    queryStr += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    queryParams.push(limit, offset);
+    const [countResult, dataResult] = await Promise.all([
+      db.query(countQuery, values.slice(0, values.length - 2)), // Exclude limit/offset for count
+      db.query(dataQuery, values)
+    ]);
 
-    const { rows } = await pool.query(queryStr, queryParams);
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].count, 10)
+    };
+  }
 
-    return { data: rows, totalCount };
+  async findById(id: string) {
+    const query = 'SELECT * FROM works WHERE id = $1';
+    const result = await db.query(query, [id]);
+    return result.rows[0] || null;
   }
 }
