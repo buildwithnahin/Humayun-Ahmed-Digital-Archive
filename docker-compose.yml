@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: archive_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_DB: ${DB_NAME:-humayun_archive_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - archive_network
+
+  backend:
+    build:
+      context: ./backend
+    container_name: archive_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - DB_NAME=${DB_NAME:-humayun_archive_db}
+      - PORT=5000
+    depends_on:
+      - db
+    networks:
+      - archive_network
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: archive_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - archive_network
+
+volumes:
+  postgres_data:
+
+networks:
+  archive_network:
+    driver: bridge
