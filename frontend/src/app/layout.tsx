@@ -31,9 +31,9 @@ export default function RootLayout({
               <button className="p-2 hover:bg-white/10 rounded-full transition-colors" aria-label="Search">
                 <Search size={20} />
               </button>
-              <button className="p-2 hover:bg-white/10 rounded-full transition-colors" aria-label="Profile">
+              <Link href="/profile" className="p-2 hover:bg-white/10 rounded-full transition-colors" aria-label="Profile">
                 <User size={20} />
-              </button>
+              </Link>
             </div>
           </div>
         </header>

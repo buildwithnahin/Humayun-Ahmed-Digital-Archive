@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import workRoutes from './routes/work.routes';
 import authRoutes from './routes/auth.routes';
 import favoriteRoutes from './routes/favorite.routes';
+import userRoutes from './routes/user.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(morgan('dev')); // Standard logger
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/works', workRoutes);
 app.use('/api/v1/favorites', favoriteRoutes);
 
